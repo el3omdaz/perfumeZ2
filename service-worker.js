@@ -2,7 +2,7 @@
 // Service Worker — حاسبة العطور الاحترافية
 // ═══════════════════════════════════════════════════
 
-const CACHE_NAME = "atour-v1.0";
+const CACHE_NAME = "atour-v2.0";
 const ASSETS = [
   "/",
   "/index.html",
