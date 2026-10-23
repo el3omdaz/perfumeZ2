@@ -78,6 +78,7 @@ const INV = (function () {
   let expanded = new Set();
   let ready = false;
   let sheetOpen = false;
+  let filtersOpen = false;
   let flashTimer = null;
 
   // ── Helpers ──
@@ -168,48 +169,64 @@ const INV = (function () {
   function shell() {
     $("tab-inv").innerHTML = `
     <div class="inv">
+      <header class="inv-hero">
+        <div class="inv-hero-brand">
+          <span class="inv-hero-logo">◇</span>
+          <div>
+            <p class="inv-kicker">PERFUME INVENTORY</p>
+            <h2>مجموعتي العطرية</h2>
+            <span class="inv-saved"><i></i>يتم الحفظ تلقائيًا</span>
+          </div>
+        </div>
+        <details class="inv-more">
+          <summary aria-label="المزيد">⋯</summary>
+          <div class="inv-more-menu">
+            <button type="button" class="inv-btn" onclick="INV.exportData()">⬇️ تصدير نسخة</button>
+            <label class="inv-btn">⬆️ استيراد نسخة
+              <input id="inv-import" type="file" accept=".json,application/json" onchange="INV.importData(event)" style="display:none">
+            </label>
+            <button type="button" class="inv-btn inv-danger" onclick="INV.resetDefaults()">↩️ استعادة الأصلية</button>
+          </div>
+        </details>
+      </header>
+
       <div id="inv-stats" class="inv-stats"></div>
       <div id="inv-cost" class="inv-cost"></div>
 
       <div class="inv-toolbar">
-        <div class="inv-search">
-          <input id="inv-q" type="search" placeholder="🔍 ابحث بالماركة أو اسم العطر" autocomplete="off" oninput="INV.setFilter('search',this.value)">
+        <div class="inv-toolbar-main">
+          <div class="inv-search">
+            <input id="inv-q" type="search" placeholder="ابحث عن عطر أو ماركة…" autocomplete="off" oninput="INV.setFilter('search',this.value)">
+          </div>
+          <button id="inv-filter-btn" type="button" class="inv-filter-btn" onclick="INV.toggleFilters()" aria-label="إظهار الفلاتر">☰</button>
         </div>
-        <button class="inv-add-btn" onclick="INV.openSheet()" aria-label="إضافة عطر">＋ إضافة</button>
+        <div id="inv-view-tabs" class="inv-view-tabs"></div>
+        <div id="inv-filter-panel" class="inv-filter-panel">
+          <select id="inv-f-stage" aria-label="المرحلة" onchange="INV.setFilter('stage',this.value)">
+            <option value="all">كل المراحل</option>
+            ${STAGES.map(s => `<option value="${s}">${s}</option>`).join("")}
+          </select>
+          <select id="inv-f-status" aria-label="حالة الشراء" onchange="INV.setFilter('status',this.value)">
+            <option value="all">كل الحالات</option>
+            <option value="purchased">تم شراؤه</option>
+            <option value="wanted">مطلوب شراؤه</option>
+            <option value="unset">غير محدد</option>
+            <option value="canceled">ملغي</option>
+          </select>
+          <button type="button" class="inv-clear" onclick="INV.clearFilters()">✕ مسح البحث والفلاتر</button>
+        </div>
       </div>
-      <div class="inv-filter-row">
-        <select id="inv-f-gender" onchange="INV.setFilter('gender',this.value)">
-          <option value="all">كل الأقسام</option>
-          ${GROUPS.map(g => `<option value="${g}">${g}</option>`).join("")}
-        </select>
-        <select id="inv-f-stage" onchange="INV.setFilter('stage',this.value)">
-          <option value="all">كل المراحل</option>
-          ${STAGES.map(s => `<option value="${s}">${s}</option>`).join("")}
-        </select>
-      </div>
-      <div class="inv-meta">
-        <span id="inv-count"></span>
-        <button id="inv-clear" class="inv-link" onclick="INV.clearFilters()" style="display:none">✕ مسح الفلاتر</button>
+
+      <div class="inv-list-head">
+        <div><h3 id="inv-list-title">كل العطور</h3><p>اضغط على البطاقة لعرض التفاصيل والتعديل</p></div>
+        <span id="inv-count" class="inv-count"></span>
       </div>
 
       <div id="inv-list"></div>
       <div id="inv-empty" class="inv-empty" style="display:none">
         <strong>لا توجد نتائج مطابقة</strong>جرّب تغيير البحث أو مسح الفلاتر
       </div>
-
-      <details class="inv-data">
-        <summary>⚙ النسخ الاحتياطي والبيانات</summary>
-        <div class="inv-data-body">
-          <p class="inv-hint">البيانات تُحفظ تلقائيًا على جهازك مع كل تعديل. صدّر نسخة احتياطية لنقلها إلى جهاز آخر أو لاستيراد قائمتك القديمة.</p>
-          <div class="inv-data-btns">
-            <button class="inv-btn" onclick="INV.exportData()">⬇️ تصدير</button>
-            <label class="inv-btn">⬆️ استيراد
-              <input id="inv-import" type="file" accept=".json,application/json" onchange="INV.importData(event)" style="display:none">
-            </label>
-            <button class="inv-btn inv-danger" onclick="INV.resetDefaults()">↩️ استعادة القائمة الأصلية</button>
-          </div>
-        </div>
-      </details>
+      <button type="button" class="inv-add-btn" onclick="INV.openSheet()"><b>＋</b> إضافة عطر جديد</button>
     </div>
 
     <div id="inv-sheet" class="inv-sheet" onclick="if(event.target===this)INV.closeSheet()">
@@ -253,21 +270,33 @@ const INV = (function () {
 
   // ── Render: stats + cost ──
   function renderStats() {
-    const live = items.filter(x => !x.canceled);
     const nPurchased = items.filter(x => stateOf(x) === "purchased").length;
     const nWanted = items.filter(x => stateOf(x) === "wanted").length;
-    const nCanceled = items.filter(x => x.canceled).length;
-    const chips = [
-      { key: "all", label: "الكل", n: items.length, cls: "" },
-      { key: "purchased", label: "تم شراؤه", n: nPurchased, cls: "ok" },
-      { key: "wanted", label: "مطلوب", n: nWanted, cls: "want" },
-      { key: "canceled", label: "ملغي", n: nCanceled, cls: "bad" }
-    ];
-    $("inv-stats").innerHTML = chips.map(c => `
-      <button class="inv-stat ${c.cls} ${filters.status === c.key ? "on" : ""}" onclick="INV.setFilter('status','${c.key}')">
-        <span class="inv-stat-n">${c.n}</span><span class="inv-stat-l">${c.label}</span>
-      </button>`).join("");
+    const live = items.filter(x => !x.canceled);
+    const totalCost = live.reduce((sum, x) => sum + costOf(x), 0);
+    $("inv-stats").innerHTML = `
+      <article class="inv-stat cost"><span class="inv-stat-l">إجمالي التكلفة</span><strong class="inv-stat-n">${money(totalCost)} <small>د.ك</small></strong></article>
+      <article class="inv-stat"><span class="inv-stat-l">كل العطور</span><strong class="inv-stat-n">${items.length}</strong></article>
+      <article class="inv-stat want"><span class="inv-stat-l">قائمة الشراء</span><strong class="inv-stat-n">${nWanted}</strong></article>
+      <article class="inv-stat ok"><span class="inv-stat-l">تم شراؤها</span><strong class="inv-stat-n">${nPurchased}</strong></article>`;
+    renderViewTabs();
     renderCost();
+  }
+  function renderViewTabs() {
+    const counts = Object.fromEntries(GROUPS.map(g => [g, items.filter(x => x.gender === g).length]));
+    const wanted = items.filter(x => stateOf(x) === "wanted").length;
+    const active = filters.status === "wanted" && filters.gender === "all"
+      ? "wanted"
+      : filters.status === "all" ? filters.gender : "custom";
+    const tabs = [
+      { key: "all", label: "الكل", n: items.length },
+      ...GROUPS.map(g => ({ key: g, label: g, n: counts[g] })),
+      { key: "wanted", label: "قائمة الشراء", n: wanted }
+    ];
+    $("inv-view-tabs").innerHTML = tabs.map(t => `
+      <button type="button" class="inv-view-tab ${active === t.key ? "on" : ""}" onclick="INV.setView('${t.key}')">
+        ${t.label} <b>${t.n}</b>
+      </button>`).join("");
   }
   function renderCost() {
     const wanted = items.filter(x => stateOf(x) === "wanted");
@@ -275,22 +304,14 @@ const INV = (function () {
     const sum = l => l.reduce((a, x) => a + costOf(x), 0);
     const missing = wanted.filter(x => !costOf(x)).length;
     $("inv-cost").innerHTML = `
-      <div class="inv-cost-box want">
-        <div class="inv-cost-l">💰 تكلفة المطلوب شراؤه (50 مل)</div>
-        <div class="inv-cost-v">${money(sum(wanted))} <small>د.ك</small></div>
-        <div class="inv-cost-s">${wanted.length} عطر${missing ? ` · ${missing} بدون تكلفة` : ""}</div>
-      </div>
-      <div class="inv-cost-box ok">
-        <div class="inv-cost-l">✅ تكلفة ما تم شراؤه</div>
-        <div class="inv-cost-v">${money(sum(bought))} <small>د.ك</small></div>
-        <div class="inv-cost-s">${bought.length} عطر</div>
-      </div>`;
+      <span>المطلوب: <strong>${money(sum(wanted))} د.ك</strong>${missing ? ` · ${missing} بدون تكلفة` : ""}</span>
+      <span>المشترى: <strong>${money(sum(bought))} د.ك</strong></span>`;
   }
 
   // ── Render: list ──
   function stars(n) { return "⭐".repeat(n); }
   function statusLabel(st) {
-    return st === "purchased" ? "تم شراؤه" : st === "wanted" ? "مطلوب" : st === "canceled" ? "ملغي" : "";
+    return st === "purchased" ? "تم شراؤه" : st === "wanted" ? "مطلوب" : st === "canceled" ? "ملغي" : "غير محدد";
   }
   function rowHtml(it) {
     const st = stateOf(it);
@@ -298,21 +319,19 @@ const INV = (function () {
     const cost = costOf(it);
     return `
     <article class="inv-item ${st} ${open ? "open" : ""}" id="inv-i-${esc(it.id)}">
-      <div class="inv-row" onclick="INV.toggle('${esc(it.id)}')">
+      <div class="inv-row" role="button" tabindex="0" aria-expanded="${open}" onclick="INV.toggle('${esc(it.id)}')" onkeydown="if(event.key==='Enter'){INV.toggle('${esc(it.id)}')}">
         <span class="inv-badge">${esc(initials(it.brand))}</span>
         <div class="inv-info">
           <div class="inv-brand">${esc(it.brand)}</div>
           <div class="inv-name">${esc(it.name)}</div>
           <div class="inv-sub">
-            <span>${stars(it.priority)}</span>
-            <span class="inv-stage s${STAGES.indexOf(it.stage) + 1}">${it.stage === STAGES[0] ? "م1" : "م2"}</span>
+            <span class="inv-priority">${stars(it.priority)}</span>
+            <span class="inv-stage">${esc(it.stage)}</span>
             ${cost ? `<span class="inv-cost-chip">${money(cost)} د.ك</span>` : ""}
           </div>
         </div>
-        <div class="inv-side">
-          ${st !== "none" ? `<span class="inv-pill ${st}">${statusLabel(st)}</span>` : ""}
-          <span class="inv-chev">${open ? "▲" : "▼"}</span>
-        </div>
+        <span class="inv-pill ${st}">${statusLabel(st)}</span>
+        <span class="inv-chev">⌄</span>
       </div>
       ${open ? detailHtml(it, st) : ""}
     </article>`;
@@ -320,33 +339,47 @@ const INV = (function () {
   function detailHtml(it, st) {
     const base = st === "canceled" ? (it.purchased ? "purchased" : it.wanted ? "wanted" : "none") : st;
     const seg = (val, label) =>
-      `<button class="inv-seg ${val} ${base === val ? "on" : ""}" onclick="INV.setState('${esc(it.id)}','${val}')">${label}</button>`;
+      `<button type="button" class="inv-seg ${val} ${base === val ? "on" : ""}" onclick="INV.setState('${esc(it.id)}','${val}')">${label}</button>`;
     return `
     <div class="inv-detail">
-      <div class="inv-lbl">حالة الشراء</div>
-      <div class="inv-segs">${seg("none", "غير محدد")}${seg("wanted", "مطلوب")}${seg("purchased", "تم شراؤه")}</div>
+      <div class="inv-detail-inner">
+        <div class="inv-lbl">حالة الشراء</div>
+        <div class="inv-segs">${seg("none", "غير محدد")}${seg("wanted", "مطلوب")}${seg("purchased", "تم شراؤه")}</div>
 
-      <div class="inv-lbl">الأولوية</div>
-      <div class="inv-segs">
-        ${[1, 2, 3].map(v => `<button class="inv-seg star ${it.priority === v ? "on" : ""}" onclick="INV.setPriority('${esc(it.id)}',${v})">${stars(v)}</button>`).join("")}
-      </div>
+        <div class="inv-lbl">الأولوية</div>
+        <div class="inv-segs">
+          ${[1, 2, 3].map(v => `<button type="button" class="inv-seg star ${it.priority === v ? "on" : ""}" onclick="INV.setPriority('${esc(it.id)}',${v})">${stars(v)}</button>`).join("")}
+        </div>
 
-      <label class="inv-lbl" for="inv-c-${esc(it.id)}">تكلفة 50 مل بالدينار</label>
-      <input id="inv-c-${esc(it.id)}" type="number" inputmode="decimal" min="0" step="0.001" value="${esc(it.cost50)}" placeholder="0.000" oninput="INV.setField('${esc(it.id)}','cost50',this.value)">
+        <div class="inv-fields">
+          <div>
+            <label class="inv-lbl" for="inv-c-${esc(it.id)}">تكلفة 50 مل بالدينار</label>
+            <input id="inv-c-${esc(it.id)}" type="number" inputmode="decimal" min="0" step="0.001" value="${esc(it.cost50)}" placeholder="0.000" oninput="INV.setField('${esc(it.id)}','cost50',this.value)">
+          </div>
+          <div>
+            <label class="inv-lbl" for="inv-t-${esc(it.id)}">ملاحظات</label>
+            <textarea id="inv-t-${esc(it.id)}" placeholder="اكتب ملاحظاتك هنا" oninput="INV.setField('${esc(it.id)}','notes',this.value)">${esc(it.notes)}</textarea>
+          </div>
+        </div>
 
-      <label class="inv-lbl" for="inv-t-${esc(it.id)}">ملاحظات</label>
-      <textarea id="inv-t-${esc(it.id)}" placeholder="اكتب ملاحظاتك هنا" oninput="INV.setField('${esc(it.id)}','notes',this.value)">${esc(it.notes)}</textarea>
-
-      <div class="inv-foot">
-        <button class="inv-btn" onclick="INV.toggleCancel('${esc(it.id)}')">${it.canceled ? "↩️ إعادة العطر للقائمة" : "🚫 إلغاء العطر"}</button>
-        <button class="inv-btn inv-danger" onclick="INV.remove('${esc(it.id)}')">🗑 حذف</button>
+        <div class="inv-foot">
+          <button type="button" class="inv-btn" onclick="INV.toggleCancel('${esc(it.id)}')">${it.canceled ? "↩️ إعادة العطر للقائمة" : "🚫 إلغاء العطر"}</button>
+          <button type="button" class="inv-btn inv-danger" onclick="INV.remove('${esc(it.id)}')">🗑 حذف</button>
+        </div>
       </div>
     </div>`;
   }
   function renderList() {
     const list = filtered();
     $("inv-count").textContent = `${list.length} من ${items.length}`;
-    $("inv-clear").style.display = filtersActive() ? "inline-block" : "none";
+    let title = "كل العطور";
+    if (filters.gender !== "all" && filters.status === "all") title = filters.gender;
+    else if (filters.status === "wanted" && filters.gender === "all") title = "قائمة الشراء";
+    else if (filters.status === "purchased" && filters.gender === "all") title = "تم شراؤها";
+    else if (filters.status === "canceled" && filters.gender === "all") title = "العطور الملغاة";
+    else if (filters.status === "unset" && filters.gender === "all") title = "غير محدد";
+    else if (filters.gender !== "all" || filters.status !== "all") title = "نتائج التصفية";
+    $("inv-list-title").textContent = title;
     $("inv-list").innerHTML = GROUPS.map(g => {
       const arr = sortItems(list.filter(x => x.gender === g));
       if (!arr.length) return "";
@@ -366,13 +399,31 @@ const INV = (function () {
 
   // ── Actions ──
   function setFilter(key, val) {
-    if (key === "status" && filters.status === val) val = "all";
     filters[key] = val;
-    if (key === "status") renderAll(); else renderList();
+    if (key === "status" || key === "gender") renderAll(); else renderList();
+  }
+  function setView(view) {
+    filters.gender = GROUPS.includes(view) ? view : "all";
+    filters.status = view === "wanted" ? "wanted" : "all";
+    const status = $("inv-f-status");
+    if (status) status.value = filters.status;
+    renderAll();
+  }
+  function toggleFilters() {
+    filtersOpen = !filtersOpen;
+    const panel = $("inv-filter-panel");
+    const button = $("inv-filter-btn");
+    if (panel) panel.classList.toggle("show", filtersOpen);
+    if (button) {
+      button.classList.toggle("on", filtersOpen);
+      button.setAttribute("aria-expanded", String(filtersOpen));
+    }
   }
   function clearFilters() {
     filters = { search: "", gender: "all", stage: "all", status: "all" };
-    $("inv-q").value = ""; $("inv-f-gender").value = "all"; $("inv-f-stage").value = "all";
+    $("inv-q").value = "";
+    $("inv-f-stage").value = "all";
+    $("inv-f-status").value = "all";
     renderAll();
   }
   function toggle(id) {
@@ -482,15 +533,16 @@ const INV = (function () {
   function back() {
     if (!ready) return false;
     if (sheetOpen) { closeSheet(); return true; }
+    if (filtersOpen) { toggleFilters(); return true; }
     if (expanded.size) { expanded.clear(); renderList(); return true; }
     if (filtersActive()) { clearFilters(); return true; }
     return false;
   }
-  function canBack() { return ready && (sheetOpen || expanded.size > 0 || !!filtersActive()); }
+  function canBack() { return ready && (sheetOpen || filtersOpen || expanded.size > 0 || !!filtersActive()); }
 
   return {
     init, show, back, canBack,
-    setFilter, clearFilters, toggle, setState, setPriority, setField,
+    setFilter, setView, toggleFilters, clearFilters, toggle, setState, setPriority, setField,
     toggleCancel, remove, openSheet, closeSheet, add,
     exportData, importData, resetDefaults
   };
