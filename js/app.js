@@ -1034,8 +1034,12 @@ function showTab(t) {
   el("tab-calc").style.display  = t === "calc"  ? "block" : "none";
   el("tab-blend").style.display = t === "blend" ? "block" : "none";
   el("tab-favs").style.display  = t === "favs"  ? "block" : "none";
-  document.querySelectorAll(".tab").forEach((b,i) => b.classList.toggle("active", i === (t==="calc"?0:t==="blend"?1:2)));
-  if (t === "favs")  renderFavs();
+  el("tab-inv").style.display   = t === "inv"   ? "block" : "none";
+  const idx = { calc: 0, blend: 1, favs: 2, inv: 3 }[t];
+  document.querySelectorAll(".tab").forEach((b,i) => b.classList.toggle("active", i === idx));
+  if (t !== "inv" && typeof INV !== "undefined") INV.closeSheet();
+  if (t === "favs")     renderFavs();
+  else if (t === "inv") INV.show();
   else render();
 }
 

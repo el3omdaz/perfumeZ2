@@ -22,6 +22,7 @@
 <meta name="description" content="حاسبة العطور الاحترافية — تركيبات، مزج، تكاليف، أرباح"/>
 
 <link rel="stylesheet" href="css/style.css"/>
+<link rel="stylesheet" href="css/inventory.css"/>
 
 <!-- iOS Safe Area -->
 <style>
@@ -30,8 +31,30 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
   .container {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
   }
+
+  /* ── أزرار التنقل الثابتة ── */
+  .fab-nav {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + 16px);
+    z-index: 150;
+    display: flex; align-items: center; gap: 6px;
+    height: 46px; padding: 0 16px;
+    background: rgba(20,14,8,0.92);
+    color: #e8c070;
+    border: 1.5px solid rgba(232,192,112,0.55);
+    border-radius: 30px;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: opacity .2s, transform .15s;
+  }
+  .fab-nav:active { transform: scale(0.94); }
+  #fab-back { right: 16px; }
+  #fab-home { left: 16px; }
+  .fab-nav.fab-off { opacity: 0.35; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -46,15 +69,21 @@
     <button class="tab active" onclick="showTab('calc')">🧪 حاسبة</button>
     <button class="tab" onclick="showTab('blend')">🎨 مزج</button>
     <button class="tab" onclick="showTab('favs')">⭐ مفضلة</button>
+    <button class="tab" onclick="showTab('inv')">📦 مخزون</button>
   </div>
 
   <div id="tab-calc"></div>
   <div id="tab-blend" style="display:none"></div>
   <div id="tab-favs" style="display:none"></div>
+  <div id="tab-inv" style="display:none"></div>
 </div>
 
 <div id="modal"></div>
 <div id="toast"></div>
+
+<!-- أزرار التنقل الثابتة -->
+<button id="fab-back" class="fab-nav fab-off" onclick="goBack()" aria-label="رجوع">→ رجوع</button>
+<button id="fab-home" class="fab-nav" onclick="goHome()" aria-label="الرئيسية">🏠 الرئيسية</button>
 
 <!-- Install Banner (iOS) -->
 <div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,#1a1008,#2a1a08);border-top:1px solid rgba(232,192,112,0.4);padding:14px 18px;padding-bottom:calc(14px + env(safe-area-inset-bottom));z-index:9999;font-family:inherit">
@@ -69,7 +98,54 @@
 
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
+<script src="js/inventory.js"></script>
 <script>
+// ── Navigation: Back / Home ──
+function scrollTop0() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+function canGoBack() {
+  const m = document.getElementById('modal');
+  if (m && m.style.display === 'flex') return true;
+  if (S.tab === 'calc') return S.step > 1;
+  return true; // blend / favs → يرجع للحاسبة
+}
+
+function goBack() {
+  const m = document.getElementById('modal');
+  if (m && m.style.display === 'flex') { closeAdd(); return; }
+  if (S.tab === 'calc') {
+    if (S.step > 1) { setStep(S.step - 1); scrollTop0(); }
+  } else if (S.tab === 'blend') {
+    // تراجع خطوة: امسح آخر عطر تم اختياره، وإذا ما في شي ارجع للحاسبة
+    if (S.bPerf3)      { S.bPerf3 = null; renderBlend(); }
+    else if (S.bPerf2) { S.bPerf2 = null; renderBlend(); }
+    else if (S.bPerf1) { S.bPerf1 = null; renderBlend(); }
+    else               { showTab('calc'); }
+    scrollTop0();
+  } else if (S.tab === 'inv') {
+    if (!INV.back()) showTab('calc');
+    scrollTop0();
+  } else {
+    showTab('calc'); scrollTop0();
+  }
+  updateNav();
+}
+
+function goHome() {
+  const m = document.getElementById('modal');
+  if (m && m.style.display === 'flex') closeAdd();
+  S.step = 1;
+  showTab('calc');
+  scrollTop0();
+  updateNav();
+}
+
+function updateNav() {
+  const b = document.getElementById('fab-back');
+  if (b) b.classList.toggle('fab-off', !canGoBack());
+}
+setInterval(updateNav, 250);
+
 // ── Service Worker Registration ──
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

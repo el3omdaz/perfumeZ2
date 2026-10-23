@@ -2,7 +2,7 @@
 // Service Worker — حاسبة العطور الاحترافية
 // ═══════════════════════════════════════════════════
 
-const CACHE_NAME = "atour-v3.0";
+const CACHE_NAME = "atour-v3.1";
 // مسارات نسبية حتى تعمل داخل مجلد المشروع على GitHub Pages
 const ASSETS = [
   "./",
@@ -10,6 +10,8 @@ const ASSETS = [
   "./css/style.css",
   "./js/app.js",
   "./js/data.js",
+  "./js/inventory.js",
+  "./css/inventory.css",
   "./icon-192.png",
   "./icon-512.png",
   "./manifest.json"
