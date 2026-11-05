@@ -182,6 +182,16 @@
 #inv-collection-tabs { padding-bottom: 8px; border-bottom: 1px solid var(--inv-line); }
 .inv-own-chip { padding: 3px 7px; border-radius: 999px; color: #72562b; background: var(--inv-gold-soft); font-size: 9px; font-weight: 850; }
 .inv-collection-action { width: 100%; margin-top: 12px; color: #72562b; border-color: #e2c999; background: var(--inv-gold-soft); }
+.inv-market-note { margin: 7px 3px 12px; color: var(--inv-muted); font-size: 10px; line-height: 1.7; }
+.inv-market-price { margin-top: 5px; color: var(--inv-green); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
+.inv-market-price span { color: var(--inv-muted); font-size: 10px; }
+.inv-market-price.missing { color: var(--inv-muted); }
+.inv-market-price small { display: block; }
+.inv-market-detail { margin-bottom: 12px; padding: 10px; border: 1px solid #c3e1d5; border-radius: 11px; background: var(--inv-green-soft); }
+.inv-market-label { color: var(--inv-ink); font-size: 11px; font-weight: 800; }
+.inv-market-detail a { display: inline-block; margin-top: 5px; color: var(--inv-green); font-size: 11px; text-decoration: underline; }
+.inv-market-detail small { display: block; margin-top: 5px; color: var(--inv-muted); font-size: 10px; line-height: 1.6; }
+#inv-f-price { grid-column: 1/-1; }
 .inv-filter-panel { display: none; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--inv-line); }
 .inv-filter-panel.show { display: grid; }
 #tab-inv select,

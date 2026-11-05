@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync('js/inventory.js', 'utf8');
+const priceSource = fs.readFileSync('js/kuwait-prices.js', 'utf8');
 const key = 'kuwait_perfume_manager_v3';
 
 function app(saved) {
@@ -16,7 +17,7 @@ function app(saved) {
   const context = vm.createContext({ document: { getElementById: element },
     localStorage: { getItem: k => storage.get(k), setItem: (k, v) => storage.set(k, v) },
     setTimeout() {}, clearTimeout() {}, console, alert(message) { throw Error(message); }, confirm: () => true });
-  vm.runInContext(source + '\nthis.inv = INV;', context);
+  vm.runInContext(priceSource + '\n' + source + '\nthis.inv = INV;', context);
   context.inv.init();
   return { inv: context.inv, element, items: () => JSON.parse(storage.get(key)) };
 }
@@ -76,4 +77,59 @@ test('section changes preserve filters, transfers preserve purchase data and tot
 
 test('empty saved inventory remains empty after reload', () => {
   assert.deepEqual(app([]).items(), []);
+});
+
+test('market catalogue covers 98 perfumes with 97 sourced bottle prices and one unresolved edition', () => {
+  const prices = vm.runInNewContext(priceSource + '\nKUWAIT_PRICES;');
+  assert.equal(prices.length, 98);
+  assert.equal(prices.filter(x => x.priceKwd > 0).length, 97);
+  for (const price of prices.filter(x => x.priceKwd > 0)) {
+    assert.ok(Number.isFinite(price.priceKwd));
+    assert.ok(price.sizeMl >= 50 && price.sizeMl <= 200);
+    assert.equal(new URL(price.sourceUrl).protocol, 'https:');
+    assert.ok(price.store);
+    assert.equal(price.checkedAt, '2026-11-06');
+  }
+  const a = app();
+  assert.match(a.element('inv-market-note').textContent, /97 من 98/);
+  a.inv.setFilter('price', 'missing');
+  assert.match(a.element('inv-list').innerHTML, /Erba Pura Style/);
+  assert.equal((a.element('inv-list').innerHTML.match(/id="inv-i-/g) || []).length, 1);
+});
+
+test('reference prices match saved custom IDs without overwriting oil costs or user state', () => {
+  const original = { id: 'my-explorer', brand: 'Montblanc', name: 'Explorer', ownCollection: true,
+    cost50: '8.75', notes: 'تكلفة المورد', purchased: true, stage: 'المرحلة الثانية' };
+  const a = app([original]);
+  for (const field of Object.keys(original)) assert.equal(a.items()[0][field], original[field]);
+  assert.match(a.element('inv-list').innerHTML, /21\.6/);
+  assert.match(a.element('inv-stats').innerHTML, /8\.75/);
+  assert.doesNotMatch(a.element('inv-stats').innerHTML, /21\.6/);
+  a.inv.toggle('my-explorer');
+  const html = a.element('inv-list').innerHTML;
+  assert.match(html, /https:\/\/www.xcite.com\/montblanc-explorer-edp-100ml-perfume-men\/p/);
+  assert.match(html, /2026-11-06/);
+  assert.match(html, /100 مل/);
+  assert.match(html, /تكلفة الزيت 50 مل/);
+  assert.equal(app(a.items()).items()[0].cost50, '8.75');
+});
+
+test('budget filter uses actual bottle prices, combines with sections, and clears correctly', () => {
+  const a = app();
+  a.inv.setCollection('own');
+  a.inv.setFilter('price', 'under30');
+  const html = a.element('inv-list').innerHTML;
+  assert.match(html, /Explorer/);
+  assert.match(html, /Cedrat Boise/);
+  assert.doesNotMatch(html, /Baccarat Rouge/);
+  assert.doesNotMatch(html, /Erba Pura Style/);
+  assert.doesNotMatch(html, /Dylan Blue/);
+  a.inv.setCollection('general');
+  assert.match(a.element('inv-list').innerHTML, /Dylan Blue/);
+  a.inv.clearFilters();
+  assert.match(a.element('inv-list').innerHTML, /Baccarat Rouge/);
+  assert.equal(a.element('inv-f-price').value, 'all');
+  a.inv.setFilter('price', 'missing');
+  assert.equal(a.inv.back(), true);
+  assert.match(a.element('inv-list').innerHTML, /Explorer/);
 });

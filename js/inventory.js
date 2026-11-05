@@ -139,7 +139,7 @@ const INV = (function () {
 
   // ── State ──
   let items = [];
-  let filters = { search: "", gender: "all", stage: "all", status: "all", collection: "all" };
+  let filters = { search: "", gender: "all", stage: "all", status: "all", collection: "all", price: "all" };
   let expanded = new Set();
   let ready = false;
   let sheetOpen = false;
@@ -185,6 +185,25 @@ const INV = (function () {
     };
     n = aliases[b]?.[n] || n;
     return `${b}:${n}`;
+  }
+  // Separate reference data: matching by name also supports saved/custom inventory IDs.
+  const marketPrices = new Map((typeof KUWAIT_PRICES === "undefined" ? [] : KUWAIT_PRICES)
+    .map(price => [matchKey(price.brand, price.name), price]));
+  function marketPrice(it) { return marketPrices.get(matchKey(it.brand, it.name)); }
+  function hasMarketPrice(price) { return Number.isFinite(price?.priceKwd) && price.priceKwd > 0; }
+  function marketPriceHtml(it, detailed = false) {
+    const price = marketPrice(it);
+    if (!hasMarketPrice(price)) {
+      return `<div class="inv-market-price missing">سعر الأصلي: غير متوفر${detailed ? `<small>${esc(price?.note || "لم يتوفر سعر مرجعي مطابق لهذا العطر في الكويت.")}</small>` : ""}</div>`;
+    }
+    const summary = `<strong>${money(price.priceKwd)} د.ك</strong><span> · ${price.sizeMl} مل${price.concentration ? ` · <bdi>${esc(price.concentration)}</bdi>` : ""}</span>`;
+    if (!detailed) return `<div class="inv-market-price">الأصلي: ${summary}</div>`;
+    return `<div class="inv-market-detail">
+      <span class="inv-market-label">سعر العطر الأصلي في الكويت</span>
+      <div class="inv-market-price">${summary}</div>
+      <a href="${esc(price.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(price.store)} ↗</a>
+      <small>تم التحقق: <bdi>${esc(price.checkedAt)}</bdi>${price.inStock === false ? " · غير متوفر حاليًا لدى المصدر" : ""}</small>
+    </div>`;
   }
   function migrateCollection(list) {
     // وجود الحقل يعني أن اختيارات المستخدم محفوظة، فلا نعيد النقل أو المحذوفات.
@@ -239,6 +258,10 @@ const INV = (function () {
   function filtered() {
     const q = filters.search.trim().toLocaleLowerCase("ar");
     return items.filter(it => {
+      const price = marketPrice(it);
+      if (filters.price === "under30" && (!hasMarketPrice(price) || price.priceKwd >= 30)) return false;
+      if (filters.price === "from30" && (!hasMarketPrice(price) || price.priceKwd < 30)) return false;
+      if (filters.price === "missing" && hasMarketPrice(price)) return false;
       if (filters.collection === "own" && !it.ownCollection) return false;
       if (filters.collection === "general" && it.ownCollection) return false;
       if (q && !`${it.brand} ${it.name}`.toLocaleLowerCase("ar").includes(q)) return false;
@@ -263,7 +286,7 @@ const INV = (function () {
     });
   }
   function filtersActive() {
-    return filters.collection !== "all" || filters.search || filters.gender !== "all" || filters.stage !== "all" || filters.status !== "all";
+    return filters.price !== "all" || filters.collection !== "all" || filters.search || filters.gender !== "all" || filters.stage !== "all" || filters.status !== "all";
   }
 
   // ── Render: shell (once) ──
@@ -293,6 +316,7 @@ const INV = (function () {
 
       <div id="inv-stats" class="inv-stats"></div>
       <div id="inv-cost" class="inv-cost"></div>
+      <p id="inv-market-note" class="inv-market-note"></p>
 
       <div class="inv-toolbar">
         <div class="inv-toolbar-main">
@@ -314,6 +338,12 @@ const INV = (function () {
             <option value="wanted">مطلوب شراؤه</option>
             <option value="unset">غير محدد</option>
             <option value="canceled">ملغي</option>
+          </select>
+          <select id="inv-f-price" aria-label="سعر العطر الأصلي" onchange="INV.setFilter('price',this.value)">
+            <option value="all">كل أسعار الأصلي</option>
+            <option value="under30">الأصلي أقل من 30 د.ك</option>
+            <option value="from30">الأصلي من 30 د.ك فأكثر</option>
+            <option value="missing">بدون سعر مرجعي</option>
           </select>
           <button type="button" class="inv-clear" onclick="INV.clearFilters()">✕ مسح البحث والفلاتر</button>
         </div>
@@ -378,12 +408,14 @@ const INV = (function () {
 
   // ── Render: stats + cost ──
   function renderStats() {
+    const priced = items.filter(it => hasMarketPrice(marketPrice(it))).length;
+    $("inv-market-note").textContent = `أسعار الأصلي متوفرة لـ ${priced} من ${items.length} عطر. أسعار مرجعية للعبوة بالحجم الموضح، وقد تتغير. لا تشمل التوصيل، ولا تدخل في إجمالي تكلفة الزيوت.`;
     const nPurchased = items.filter(x => stateOf(x) === "purchased").length;
     const nWanted = items.filter(x => stateOf(x) === "wanted").length;
     const live = items.filter(x => !x.canceled);
     const totalCost = live.reduce((sum, x) => sum + costOf(x), 0);
     $("inv-stats").innerHTML = `
-      <article class="inv-stat cost"><span class="inv-stat-l">إجمالي التكلفة</span><strong class="inv-stat-n">${money(totalCost)} <small>د.ك</small></strong></article>
+      <article class="inv-stat cost"><span class="inv-stat-l">إجمالي تكلفة الزيوت</span><strong class="inv-stat-n">${money(totalCost)} <small>د.ك</small></strong></article>
       <article class="inv-stat"><span class="inv-stat-l">كل العطور</span><strong class="inv-stat-n">${items.length}</strong></article>
       <article class="inv-stat want"><span class="inv-stat-l">قائمة الشراء</span><strong class="inv-stat-n">${nWanted}</strong></article>
       <article class="inv-stat ok"><span class="inv-stat-l">تم شراؤها</span><strong class="inv-stat-n">${nPurchased}</strong></article>`;
@@ -440,6 +472,7 @@ const INV = (function () {
         <div class="inv-info">
           <div class="inv-brand">${esc(it.brand)}</div>
           <div class="inv-name">${esc(it.name)}</div>
+          ${marketPriceHtml(it)}
           <div class="inv-sub">
             ${it.ownCollection ? `<span class="inv-own-chip">◇ الخاص بنا</span>` : ""}
             <span class="inv-priority">${stars(it.priority)}</span>
@@ -460,6 +493,7 @@ const INV = (function () {
     return `
     <div class="inv-detail">
       <div class="inv-detail-inner">
+        ${marketPriceHtml(it, true)}
         <div class="inv-lbl">حالة الشراء</div>
         <div class="inv-segs">${seg("none", "غير محدد")}${seg("wanted", "مطلوب")}${seg("purchased", "تم شراؤه")}</div>
 
@@ -470,7 +504,7 @@ const INV = (function () {
 
         <div class="inv-fields">
           <div>
-            <label class="inv-lbl" for="inv-c-${esc(it.id)}">تكلفة 50 مل بالدينار</label>
+            <label class="inv-lbl" for="inv-c-${esc(it.id)}">تكلفة الزيت 50 مل بالدينار</label>
             <input id="inv-c-${esc(it.id)}" type="number" inputmode="decimal" min="0" step="0.001" value="${esc(it.cost50)}" placeholder="0.000" oninput="INV.setField('${esc(it.id)}','cost50',this.value)">
           </div>
           <div>
@@ -555,10 +589,11 @@ const INV = (function () {
     }
   }
   function clearFilters() {
-    filters = { search: "", gender: "all", stage: "all", status: "all", collection: "all" };
+    filters = { search: "", gender: "all", stage: "all", status: "all", collection: "all", price: "all" };
     $("inv-q").value = "";
     $("inv-f-stage").value = "all";
     $("inv-f-status").value = "all";
+    $("inv-f-price").value = "all";
     renderAll();
   }
   function toggle(id) {
