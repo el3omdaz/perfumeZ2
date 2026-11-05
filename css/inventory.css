@@ -179,6 +179,9 @@
 .inv-view-tab { flex: 0 0 auto; min-height: 34px; padding: 7px 12px; border: 0; border-radius: 11px; color: #69707e; background: transparent; font-family: inherit; font-size: 11px; font-weight: 850; cursor: pointer; white-space: nowrap; }
 .inv-view-tab b { margin-right: 3px; font-size: 10px; }
 .inv-view-tab.on { color: #fff; background: var(--inv-navy); box-shadow: 0 5px 12px rgba(23,32,51,.15); }
+#inv-collection-tabs { padding-bottom: 8px; border-bottom: 1px solid var(--inv-line); }
+.inv-own-chip { padding: 3px 7px; border-radius: 999px; color: #72562b; background: var(--inv-gold-soft); font-size: 9px; font-weight: 850; }
+.inv-collection-action { width: 100%; margin-top: 12px; color: #72562b; border-color: #e2c999; background: var(--inv-gold-soft); }
 .inv-filter-panel { display: none; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--inv-line); }
 .inv-filter-panel.show { display: grid; }
 #tab-inv select,
