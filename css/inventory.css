@@ -195,6 +195,21 @@
 .inv-list-head h3 { margin: 0; color: var(--inv-ink); font-size: 18px; }
 .inv-list-head p { margin: 3px 0 0; color: var(--inv-muted); font-size: 10px; }
 .inv-count { color: var(--inv-muted); font-size: 10px; font-weight: 800; white-space: nowrap; }
+.inv-list-actions { display: flex; align-items: center; gap: 7px; }
+.inv-pdf-btn {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #d8c49f;
+  border-radius: 10px;
+  color: #72562b;
+  background: var(--inv-gold-soft);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.inv-pdf-btn:active { transform: scale(.97); }
 
 /* ── الأقسام والبطاقات ── */
 .inv-sec { margin-top: 13px; }
@@ -260,6 +275,72 @@
 /* ── إشعار الحفظ ── */
 .inv-toast { position: fixed; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 160; max-width: calc(100vw - 24px); padding: 9px 18px; border-radius: 999px; color: #fff; background: rgba(23,32,51,.96); box-shadow: 0 10px 28px rgba(23,32,51,.25); font-size: 11px; font-weight: 850; text-align: center; white-space: nowrap; opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(12px); transition: all .22s; }
 .inv-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── تقرير PDF حسب الفلاتر ── */
+#print-overlay.inv-pdf-report {
+  direction: rtl;
+  color: #172033;
+  background: #f7f4ee;
+}
+.inv-pdf-inner { max-width: 1180px !important; }
+.inv-pdf-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 14px;
+  padding: 18px 20px;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(135deg,#172033,#2c3954 72%,#4b3d2b);
+}
+.inv-pdf-head p { margin: 0 0 2px; color: #e8c990; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+#print-overlay .inv-pdf-head h2 { margin: 0 0 5px; padding: 0; border: 0; color: #fff; font-size: 23px; }
+.inv-pdf-filter { color: rgba(255,255,255,.78); font-size: 11px; font-weight: 700; }
+.inv-pdf-date { min-width: 155px; color: rgba(255,255,255,.66); font-size: 9px; line-height: 1.6; text-align: left; }
+.inv-pdf-date strong { color: #fff; font-size: 10px; }
+.inv-pdf-summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 8px; margin-bottom: 14px; }
+.inv-pdf-summary > div { padding: 10px 12px; border: 1px solid #e8e2d8; border-radius: 11px; background: #fff; }
+.inv-pdf-summary span { display: block; margin-bottom: 3px; color: #747b89; font-size: 9px; font-weight: 800; }
+.inv-pdf-summary strong { color: #172033; font-size: 16px; font-weight: 900; }
+.inv-pdf-table-wrap { overflow-x: auto; border: 1px solid #ded8ce; border-radius: 12px; background: #fff; }
+#print-overlay .inv-pdf-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 9px; }
+#print-overlay .inv-pdf-table th,
+#print-overlay .inv-pdf-table td { padding: 7px 6px; border-bottom: 1px solid #ece7df; border-left: 1px solid #f0ece5; text-align: right; vertical-align: top; }
+#print-overlay .inv-pdf-table th { color: #fff; background: #26334c; font-size: 8px; font-weight: 900; white-space: nowrap; }
+#print-overlay .inv-pdf-table tbody tr:nth-child(even) { background: #faf8f4; }
+#print-overlay .inv-pdf-table tbody tr:last-child td { border-bottom: 0; }
+.inv-pdf-index { width: 26px; color: #8a8f99; text-align: center !important; }
+.inv-pdf-name { font-weight: 900; }
+.inv-pdf-money { color: #8b672c; font-weight: 900; white-space: nowrap; }
+.inv-pdf-priority { color: #aa7f36; white-space: nowrap; }
+.inv-pdf-notes { max-width: 180px; white-space: pre-line; overflow-wrap: anywhere; }
+.inv-pdf-state { display: inline-block; padding: 3px 6px; border-radius: 999px; font-size: 8px; font-weight: 850; white-space: nowrap; }
+.inv-pdf-state.purchased { color: #11775d; background: #e8f5ef; }
+.inv-pdf-state.wanted { color: #3267c8; background: #edf3ff; }
+.inv-pdf-state.canceled { color: #b44a4a; background: #fff0f0; }
+.inv-pdf-state.none { color: #737985; background: #f1f2f4; }
+.inv-pdf-footer { margin-top: 10px; color: #8a8f99; font-size: 8px; text-align: center; }
+
+@page inventoryReport { size: A4 landscape; margin: 10mm; }
+@media print {
+  #print-overlay.inv-pdf-report { page: inventoryReport; padding: 0; background: #fff; }
+  #print-overlay .inv-pdf-inner { max-width: none !important; margin: 0; }
+  #print-overlay .inv-pdf-head { margin-bottom: 8px; padding: 12px 14px; border-radius: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #print-overlay .inv-pdf-head h2 { font-size: 18px; }
+  #print-overlay .inv-pdf-summary { grid-template-columns: repeat(5,1fr); gap: 5px; margin-bottom: 8px; }
+  #print-overlay .inv-pdf-summary > div { padding: 6px 8px; border-radius: 6px; }
+  #print-overlay .inv-pdf-summary strong { font-size: 12px; }
+  #print-overlay .inv-pdf-table-wrap { overflow: visible; border-radius: 0; }
+  #print-overlay .inv-pdf-table { min-width: 0; table-layout: auto; font-size: 7.5pt; }
+  #print-overlay .inv-pdf-table thead { display: table-header-group; }
+  #print-overlay .inv-pdf-table tr { break-inside: avoid; page-break-inside: avoid; }
+  #print-overlay .inv-pdf-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #print-overlay .inv-pdf-table th,
+  #print-overlay .inv-pdf-table td { padding: 4px 4px; }
+  #print-overlay .inv-pdf-state,
+  #print-overlay .inv-pdf-table tbody tr:nth-child(even) { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
 
 @media (min-width: 440px) {
   .inv-stats { grid-template-columns: repeat(4,minmax(0,1fr)); }

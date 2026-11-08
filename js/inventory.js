@@ -80,6 +80,7 @@ const INV = (function () {
   let sheetOpen = false;
   let filtersOpen = false;
   let flashTimer = null;
+  let pdfPreviousTitle = null;
 
   // ── Helpers ──
   const $ = id => document.getElementById(id);
@@ -219,7 +220,10 @@ const INV = (function () {
 
       <div class="inv-list-head">
         <div><h3 id="inv-list-title">كل العطور</h3><p>اضغط على البطاقة لعرض التفاصيل والتعديل</p></div>
-        <span id="inv-count" class="inv-count"></span>
+        <div class="inv-list-actions">
+          <span id="inv-count" class="inv-count"></span>
+          <button type="button" class="inv-pdf-btn" onclick="INV.exportPdf()" aria-label="تصدير النتائج الحالية PDF">📄 PDF</button>
+        </div>
       </div>
 
       <div id="inv-list"></div>
@@ -484,6 +488,109 @@ const INV = (function () {
     keepInView(it.id);
     flash("تمت إضافة العطر ✓");
   }
+
+  // ── PDF / print report ──
+  function pdfFilterLabel() {
+    const parts = [];
+    if (filters.gender !== "all") parts.push(`القسم: ${filters.gender}`);
+    if (filters.stage !== "all") parts.push(filters.stage);
+    if (filters.status !== "all") {
+      const labels = {
+        purchased: "تم شراؤه",
+        wanted: "مطلوب شراؤه",
+        unset: "غير محدد",
+        canceled: "ملغي"
+      };
+      parts.push(`الحالة: ${labels[filters.status] || filters.status}`);
+    }
+    if (filters.search.trim()) parts.push(`البحث: «${filters.search.trim()}»`);
+    return parts.length ? parts.join(" · ") : "كل العطور";
+  }
+  function closePdf() {
+    const overlay = document.getElementById("print-overlay");
+    if (overlay) overlay.remove();
+    if (pdfPreviousTitle !== null) {
+      document.title = pdfPreviousTitle;
+      pdfPreviousTitle = null;
+    }
+  }
+  function exportPdf() {
+    const matches = filtered();
+    const list = GROUPS.flatMap(g => sortItems(matches.filter(x => x.gender === g)));
+    if (!list.length) {
+      alert("لا توجد نتائج مطابقة لتصديرها. غيّر الفلاتر ثم حاول مرة أخرى.");
+      return;
+    }
+
+    closePdf();
+    const reportDate = new Date();
+    const totalCost = list.reduce((sum, x) => sum + costOf(x), 0);
+    const purchased = list.filter(x => stateOf(x) === "purchased").length;
+    const wanted = list.filter(x => stateOf(x) === "wanted").length;
+    const canceled = list.filter(x => stateOf(x) === "canceled").length;
+    const filterLabel = pdfFilterLabel();
+    const rows = list.map((it, index) => {
+      const state = stateOf(it);
+      const cost = costOf(it);
+      return `
+        <tr>
+          <td class="inv-pdf-index">${index + 1}</td>
+          <td>${esc(it.gender)}</td>
+          <td>${esc(it.brand)}</td>
+          <td class="inv-pdf-name">${esc(it.name)}</td>
+          <td>${esc(it.stage)}</td>
+          <td><span class="inv-pdf-state ${state}">${statusLabel(state)}</span></td>
+          <td class="inv-pdf-priority">${"★".repeat(it.priority)}</td>
+          <td class="inv-pdf-money">${cost ? `${money(cost)} د.ك` : "—"}</td>
+          <td class="inv-pdf-notes">${it.notes ? esc(it.notes) : "—"}</td>
+        </tr>`;
+    }).join("");
+
+    pdfPreviousTitle = document.title;
+    const scope = filters.gender !== "all"
+      ? filters.gender
+      : filters.status === "wanted" ? "قائمة-الشراء"
+      : filters.status === "purchased" ? "تم-شراؤه"
+      : "الكل";
+    document.title = `مخزون-العطور-${scope}-${reportDate.toISOString().slice(0, 10)}`;
+
+    const overlay = document.createElement("div");
+    overlay.id = "print-overlay";
+    overlay.className = "inv-pdf-report";
+    overlay.innerHTML = `
+      <div id="print-overlay-inner" class="inv-pdf-inner">
+        <div id="print-overlay-btns">
+          <button class="po-btn-print" onclick="window.print()">📄 حفظ PDF / طباعة</button>
+          <button class="po-btn-close" onclick="INV.closePdf()">✕ إغلاق</button>
+        </div>
+        <header class="inv-pdf-head">
+          <div>
+            <p>PERFUME INVENTORY</p>
+            <h2>تقرير مخزون العطور</h2>
+            <div class="inv-pdf-filter">${esc(filterLabel)}</div>
+          </div>
+          <div class="inv-pdf-date">تاريخ التقرير<br><strong>${esc(reportDate.toLocaleString("ar-KW", { dateStyle: "long", timeStyle: "short" }))}</strong></div>
+        </header>
+        <section class="inv-pdf-summary">
+          <div><span>عدد العطور</span><strong>${list.length}</strong></div>
+          <div><span>إجمالي تكلفة 50 مل</span><strong>${money(totalCost)} د.ك</strong></div>
+          <div><span>تم شراؤه</span><strong>${purchased}</strong></div>
+          <div><span>مطلوب</span><strong>${wanted}</strong></div>
+          ${canceled ? `<div><span>ملغي</span><strong>${canceled}</strong></div>` : ""}
+        </section>
+        <div class="inv-pdf-table-wrap">
+          <table class="inv-pdf-table">
+            <thead><tr><th>#</th><th>القسم</th><th>الماركة</th><th>العطر</th><th>المرحلة</th><th>الحالة</th><th>الأولوية</th><th>التكلفة</th><th>الملاحظات</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <footer class="inv-pdf-footer">تم إنشاء التقرير من حاسبة العطور الاحترافية · النتائج مطابقة للفلاتر وقت التصدير</footer>
+      </div>`;
+    document.body.appendChild(overlay);
+    window.addEventListener("afterprint", closePdf, { once: true });
+    requestAnimationFrame(() => window.print());
+  }
+
   function exportData() {
     save();
     const payload = { app: "Kuwait Perfume Manager", version: 4, exportedAt: new Date().toISOString(), perfumes: items };
@@ -544,6 +651,6 @@ const INV = (function () {
     init, show, back, canBack,
     setFilter, setView, toggleFilters, clearFilters, toggle, setState, setPriority, setField,
     toggleCancel, remove, openSheet, closeSheet, add,
-    exportData, importData, resetDefaults
+    exportPdf, closePdf, exportData, importData, resetDefaults
   };
 })();
