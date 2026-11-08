@@ -72,9 +72,74 @@ const INV = (function () {
     {id:"u13",gender:"يونيسكس",brand:"Xerjoff",name:"Naxos",priority:3,stage:"المرحلة الأولى"}
   ];
 
+  // قائمة الملصقات المعتمدة؛ تستخدم مرة واحدة لترحيل المخزون القديم.
+  const OWN_CATALOG = [
+    {"id":"own_01","brand":"Tom Ford","name":"Bitter Peach","gender":"يونيسكس"},
+    {"id":"own_02","brand":"Tom Ford","name":"Lost Cherry","gender":"يونيسكس"},
+    {"id":"own_03","brand":"Tom Ford","name":"Ombré Leather","gender":"يونيسكس"},
+    {"id":"own_04","brand":"Tom Ford","name":"Oud Wood","gender":"يونيسكس"},
+    {"id":"own_05","brand":"Tom Ford","name":"Tobacco Vanille","gender":"يونيسكس"},
+    {"id":"own_06","brand":"Tom Ford","name":"Neroli Portofino","gender":"يونيسكس"},
+    {"id":"own_07","brand":"Dior","name":"Miss Dior","gender":"نسائي"},
+    {"id":"own_08","brand":"Dior","name":"Sauvage Elixir EDP","gender":"رجالي"},
+    {"id":"own_09","brand":"Dior","name":"Sauvage EDP","gender":"رجالي"},
+    {"id":"own_10","brand":"Dior","name":"Homme Intense","gender":"رجالي"},
+    {"id":"own_11","brand":"Yves Saint Laurent","name":"Libre","gender":"نسائي"},
+    {"id":"own_12","brand":"Yves Saint Laurent","name":"Y EDP","gender":"رجالي"},
+    {"id":"own_13","brand":"Yves Saint Laurent","name":"Black Opium","gender":"نسائي"},
+    {"id":"own_14","brand":"Chanel","name":"Bleu de Chanel EDP","gender":"رجالي"},
+    {"id":"own_15","brand":"Chanel","name":"Coco Mademoiselle","gender":"نسائي"},
+    {"id":"own_16","brand":"Chanel","name":"Chance Eau Tendre","gender":"نسائي"},
+    {"id":"own_17","brand":"Maison Francis Kurkdjian","name":"Oud Satin Mood","gender":"يونيسكس"},
+    {"id":"own_18","brand":"Maison Francis Kurkdjian","name":"Gentle Fluidity Silver","gender":"يونيسكس"},
+    {"id":"own_19","brand":"Maison Francis Kurkdjian","name":"Baccarat Rouge 540","gender":"يونيسكس"},
+    {"id":"own_20","brand":"Parfums de Marly","name":"Delina Exclusif","gender":"نسائي"},
+    {"id":"own_21","brand":"Parfums de Marly","name":"Herod","gender":"رجالي"},
+    {"id":"own_22","brand":"Parfums de Marly","name":"Layton","gender":"رجالي"},
+    {"id":"own_23","brand":"Parfums de Marly","name":"Althair","gender":"رجالي"},
+    {"id":"own_24","brand":"Giorgio Armani","name":"Sì","gender":"نسائي"},
+    {"id":"own_25","brand":"Giorgio Armani","name":"Stronger With You Intensely","gender":"رجالي"},
+    {"id":"own_26","brand":"Giorgio Armani","name":"Acqua di Giò Profondo","gender":"رجالي"},
+    {"id":"own_27","brand":"Louis Vuitton","name":"Ombre Nomade","gender":"يونيسكس"},
+    {"id":"own_28","brand":"Carolina Herrera","name":"Good Girl","gender":"نسائي"},
+    {"id":"own_29","brand":"Carolina Herrera","name":"Good Girl Blush","gender":"نسائي"},
+    {"id":"own_30","brand":"Creed","name":"Aventus","gender":"رجالي"},
+    {"id":"own_31","brand":"Prada","name":"Paradoxe","gender":"نسائي"},
+    {"id":"own_32","brand":"Valentino","name":"Donna Born In Roma","gender":"نسائي"},
+    {"id":"own_33","brand":"Valentino","name":"Uomo Born in Roma Intense","gender":"رجالي"},
+    {"id":"own_34","brand":"Xerjoff","name":"Naxos","gender":"يونيسكس"},
+    {"id":"own_35","brand":"Xerjoff","name":"Erba Pura","gender":"يونيسكس"},
+    {"id":"own_36","brand":"Jean Paul Gaultier","name":"La Belle","gender":"نسائي"},
+    {"id":"own_37","brand":"Jean Paul Gaultier","name":"Le Male Elixir","gender":"رجالي"},
+    {"id":"own_38","brand":"Rabanne","name":"1 Million Elixir","gender":"رجالي"},
+    {"id":"own_39","brand":"Kayali","name":"Vanilla 28","gender":"نسائي"},
+    {"id":"own_40","brand":"Versace","name":"Eros EDP","gender":"رجالي"},
+    {"id":"own_41","brand":"Lancôme","name":"Idôle","gender":"نسائي"},
+    {"id":"own_42","brand":"Lancôme","name":"La Vie Est Belle","gender":"نسائي"},
+    {"id":"own_43","brand":"Initio","name":"Side Effect","gender":"يونيسكس"},
+    {"id":"own_44","brand":"Initio","name":"Oud for Greatness","gender":"يونيسكس"},
+    {"id":"own_45","brand":"Kilian","name":"Love, Don't Be Shy","gender":"نسائي"},
+    {"id":"own_46","brand":"Kilian","name":"Angels' Share","gender":"يونيسكس"},
+    {"id":"own_47","brand":"Burberry","name":"Goddess","gender":"نسائي"},
+    {"id":"own_48","brand":"Maison Margiela","name":"Jazz Club","gender":"يونيسكس"},
+    {"id":"own_49","brand":"Maison Margiela","name":"By the Fireplace","gender":"يونيسكس"},
+    {"id":"own_50","brand":"Mancera","name":"Cedrat Boise","gender":"يونيسكس"},
+    {"id":"own_51","brand":"Amouage","name":"Interlude Man","gender":"رجالي"},
+    {"id":"own_52","brand":"Nishane","name":"Hacivat","gender":"يونيسكس"},
+    {"id":"own_53","brand":"Givenchy","name":"Gentleman Réserve Privée","gender":"رجالي"},
+    {"id":"own_54","brand":"Narciso Rodriguez","name":"For Her EDP","gender":"نسائي"},
+    {"id":"own_55","brand":"Montale","name":"Intense Café","gender":"يونيسكس"},
+    {"id":"own_56","brand":"Jo Malone London","name":"English Pear & Freesia","gender":"يونيسكس"},
+    {"id":"own_57","brand":"Jo Malone London","name":"Wood Sage & Sea Salt","gender":"يونيسكس"},
+    {"id":"own_58","brand":"Le Labo","name":"Santal 33","gender":"يونيسكس"},
+    {"id":"own_59","brand":"Rabanne","name":"Invictus Victory Elixir","gender":"رجالي"},
+    {"id":"own_60","brand":"Montblanc","name":"Explorer","gender":"رجالي"},
+    {"id":"own_61","brand":"Maison Crivelli","name":"Hibiscus Mahajád","gender":"يونيسكس"}
+  ];
+
   // ── State ──
   let items = [];
-  let filters = { search: "", gender: "all", stage: "all", status: "all" };
+  let filters = { search: "", gender: "all", stage: "all", status: "all", collection: "all", price: "all" };
   let expanded = new Set();
   let ready = false;
   let sheetOpen = false;
@@ -101,18 +166,71 @@ const INV = (function () {
       priority: Math.min(3, Math.max(1, Number(item.priority) || 1)),
       cost50: item.cost50 ?? "",
       notes: item.notes ?? "",
+      ownCollection: item.ownCollection === true,
       canceled: Boolean(item.canceled),
       purchased, wanted
     };
   }
-  function defaults() { return DEFAULTS.map((x, i) => normalize(x, i)); }
+  function matchKey(brand, name) {
+    const clean = value => String(value).normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/[^a-z0-9\u0600-\u06ff]/g, "");
+    let b = clean(brand), n = clean(name);
+    if (b === "yvessaintlaurent") b = "ysl";
+    if (b === "pacorabanne") b = "rabanne";
+    // أسماء مختصرة موجودة في القائمة الأصلية، دون دمج إصدارات Intense أو Elixir.
+    const aliases = {
+      dior: { diorhommeintense: "hommeintense", sauvage: "sauvageedp" },
+      chanel: { bleudechanel: "bleudechaneledp" },
+      versace: { eros: "erosedp" },
+      narcisorodriguez: { forher: "forheredp" }
+    };
+    n = aliases[b]?.[n] || n;
+    return `${b}:${n}`;
+  }
+  // Separate reference data: matching by name also supports saved/custom inventory IDs.
+  const marketPrices = new Map((typeof KUWAIT_PRICES === "undefined" ? [] : KUWAIT_PRICES)
+    .map(price => [matchKey(price.brand, price.name), price]));
+  function marketPrice(it) { return marketPrices.get(matchKey(it.brand, it.name)); }
+  function hasMarketPrice(price) { return Number.isFinite(price?.priceKwd) && price.priceKwd > 0; }
+  function marketPriceHtml(it, detailed = false) {
+    const price = marketPrice(it);
+    if (!hasMarketPrice(price)) {
+      return `<div class="inv-market-price missing">سعر الأصلي: غير متوفر${detailed ? `<small>${esc(price?.note || "لم يتوفر سعر مرجعي مطابق لهذا العطر في الكويت.")}</small>` : ""}</div>`;
+    }
+    const summary = `<strong>${money(price.priceKwd)} د.ك</strong><span> · ${price.sizeMl} مل${price.concentration ? ` · <bdi>${esc(price.concentration)}</bdi>` : ""}</span>`;
+    if (!detailed) return `<div class="inv-market-price">الأصلي: ${summary}</div>`;
+    return `<div class="inv-market-detail">
+      <span class="inv-market-label">سعر العطر الأصلي في الكويت</span>
+      <div class="inv-market-price">${summary}</div>
+      <a href="${esc(price.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(price.store)} ↗</a>
+      <small>تم التحقق: <bdi>${esc(price.checkedAt)}</bdi>${price.inStock === false ? " · غير متوفر حاليًا لدى المصدر" : ""}</small>
+    </div>`;
+  }
+  function migrateCollection(list) {
+    // وجود الحقل يعني أن اختيارات المستخدم محفوظة، فلا نعيد النقل أو المحذوفات.
+    const migrated = list.some(it => Object.prototype.hasOwnProperty.call(it, "ownCollection"));
+    const result = list.map(normalize);
+    if (migrated) return result;
+    OWN_CATALOG.forEach(entry => {
+      const key = matchKey(entry.brand, entry.name);
+      const existing = result.find(it => matchKey(it.brand, it.name) === key);
+      if (existing) existing.ownCollection = true;
+      else {
+        let id = entry.id;
+        while (result.some(it => it.id === id)) id += "_new";
+        result.push(normalize({ ...entry, id, ownCollection: true }));
+      }
+    });
+    return result;
+  }
+  function defaults() { return migrateCollection(DEFAULTS); }
   function load() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         const list = Array.isArray(parsed) ? parsed : parsed.perfumes;
-        if (Array.isArray(list)) return list.map(normalize);
+        if (Array.isArray(list)) return list.length ? migrateCollection(list) : [];
       }
     } catch (e) { console.warn("INV load", e); }
     return defaults();
@@ -141,6 +259,12 @@ const INV = (function () {
   function filtered() {
     const q = filters.search.trim().toLocaleLowerCase("ar");
     return items.filter(it => {
+      const price = marketPrice(it);
+      if (filters.price === "under30" && (!hasMarketPrice(price) || price.priceKwd >= 30)) return false;
+      if (filters.price === "from30" && (!hasMarketPrice(price) || price.priceKwd < 30)) return false;
+      if (filters.price === "missing" && hasMarketPrice(price)) return false;
+      if (filters.collection === "own" && !it.ownCollection) return false;
+      if (filters.collection === "general" && it.ownCollection) return false;
       if (q && !`${it.brand} ${it.name}`.toLocaleLowerCase("ar").includes(q)) return false;
       if (filters.gender !== "all" && it.gender !== filters.gender) return false;
       if (filters.stage !== "all" && it.stage !== filters.stage) return false;
@@ -163,7 +287,7 @@ const INV = (function () {
     });
   }
   function filtersActive() {
-    return filters.search || filters.gender !== "all" || filters.stage !== "all" || filters.status !== "all";
+    return filters.price !== "all" || filters.collection !== "all" || filters.search || filters.gender !== "all" || filters.stage !== "all" || filters.status !== "all";
   }
 
   // ── Render: shell (once) ──
@@ -193,6 +317,7 @@ const INV = (function () {
 
       <div id="inv-stats" class="inv-stats"></div>
       <div id="inv-cost" class="inv-cost"></div>
+      <p id="inv-market-note" class="inv-market-note"></p>
 
       <div class="inv-toolbar">
         <div class="inv-toolbar-main">
@@ -201,6 +326,7 @@ const INV = (function () {
           </div>
           <button id="inv-filter-btn" type="button" class="inv-filter-btn" onclick="INV.toggleFilters()" aria-label="إظهار الفلاتر">☰</button>
         </div>
+        <div id="inv-collection-tabs" class="inv-view-tabs" aria-label="أقسام المخزون"></div>
         <div id="inv-view-tabs" class="inv-view-tabs"></div>
         <div id="inv-filter-panel" class="inv-filter-panel">
           <select id="inv-f-stage" aria-label="المرحلة" onchange="INV.setFilter('stage',this.value)">
@@ -213,6 +339,12 @@ const INV = (function () {
             <option value="wanted">مطلوب شراؤه</option>
             <option value="unset">غير محدد</option>
             <option value="canceled">ملغي</option>
+          </select>
+          <select id="inv-f-price" aria-label="سعر العطر الأصلي" onchange="INV.setFilter('price',this.value)">
+            <option value="all">كل أسعار الأصلي</option>
+            <option value="under30">الأصلي أقل من 30 د.ك</option>
+            <option value="from30">الأصلي من 30 د.ك فأكثر</option>
+            <option value="missing">بدون سعر مرجعي</option>
           </select>
           <button type="button" class="inv-clear" onclick="INV.clearFilters()">✕ مسح البحث والفلاتر</button>
         </div>
@@ -266,6 +398,12 @@ const INV = (function () {
             <option value="purchased">تم شراؤه</option>
           </select>
         </label>
+        <label>مجموعة المخزون
+          <select id="inv-n-collection">
+            <option value="general">المخزون العام</option>
+            <option value="own">الخاص بنا</option>
+          </select>
+        </label>
         <button type="submit" class="inv-primary">＋ إضافة العطر</button>
       </form>
     </div>
@@ -274,12 +412,14 @@ const INV = (function () {
 
   // ── Render: stats + cost ──
   function renderStats() {
+    const priced = items.filter(it => hasMarketPrice(marketPrice(it))).length;
+    $("inv-market-note").textContent = `أسعار الأصلي متوفرة لـ ${priced} من ${items.length} عطر. أسعار مرجعية للعبوة بالحجم الموضح، وقد تتغير. لا تشمل التوصيل، ولا تدخل في إجمالي تكلفة الزيوت.`;
     const nPurchased = items.filter(x => stateOf(x) === "purchased").length;
     const nWanted = items.filter(x => stateOf(x) === "wanted").length;
     const live = items.filter(x => !x.canceled);
     const totalCost = live.reduce((sum, x) => sum + costOf(x), 0);
     $("inv-stats").innerHTML = `
-      <article class="inv-stat cost"><span class="inv-stat-l">إجمالي التكلفة</span><strong class="inv-stat-n">${money(totalCost)} <small>د.ك</small></strong></article>
+      <article class="inv-stat cost"><span class="inv-stat-l">إجمالي تكلفة الزيوت</span><strong class="inv-stat-n">${money(totalCost)} <small>د.ك</small></strong></article>
       <article class="inv-stat"><span class="inv-stat-l">كل العطور</span><strong class="inv-stat-n">${items.length}</strong></article>
       <article class="inv-stat want"><span class="inv-stat-l">قائمة الشراء</span><strong class="inv-stat-n">${nWanted}</strong></article>
       <article class="inv-stat ok"><span class="inv-stat-l">تم شراؤها</span><strong class="inv-stat-n">${nPurchased}</strong></article>`;
@@ -287,13 +427,21 @@ const INV = (function () {
     renderCost();
   }
   function renderViewTabs() {
-    const counts = Object.fromEntries(GROUPS.map(g => [g, items.filter(x => x.gender === g).length]));
-    const wanted = items.filter(x => stateOf(x) === "wanted").length;
+    const own = items.filter(it => it.ownCollection).length;
+    $("inv-collection-tabs").innerHTML = [
+      { key: "all", label: "كل المخزون", n: items.length },
+      { key: "own", label: "◇ الخاص بنا", n: own },
+      { key: "general", label: "المخزون العام", n: items.length - own }
+    ].map(t => `<button type="button" class="inv-view-tab ${filters.collection === t.key ? "on" : ""}"
+      aria-pressed="${filters.collection === t.key}" onclick="INV.setCollection('${t.key}')">${t.label} <b>${t.n}</b></button>`).join("");
+    const scope = items.filter(it => filters.collection === "all" || (filters.collection === "own" ? it.ownCollection : !it.ownCollection));
+    const counts = Object.fromEntries(GROUPS.map(g => [g, scope.filter(x => x.gender === g).length]));
+    const wanted = scope.filter(x => stateOf(x) === "wanted").length;
     const active = filters.status === "wanted" && filters.gender === "all"
       ? "wanted"
       : filters.status === "all" ? filters.gender : "custom";
     const tabs = [
-      { key: "all", label: "الكل", n: items.length },
+      { key: "all", label: "الكل", n: scope.length },
       ...GROUPS.map(g => ({ key: g, label: g, n: counts[g] })),
       { key: "wanted", label: "قائمة الشراء", n: wanted }
     ];
@@ -328,7 +476,9 @@ const INV = (function () {
         <div class="inv-info">
           <div class="inv-brand">${esc(it.brand)}</div>
           <div class="inv-name">${esc(it.name)}</div>
+          ${marketPriceHtml(it)}
           <div class="inv-sub">
+            ${it.ownCollection ? `<span class="inv-own-chip">◇ الخاص بنا</span>` : ""}
             <span class="inv-priority">${stars(it.priority)}</span>
             <span class="inv-stage">${esc(it.stage)}</span>
             ${cost ? `<span class="inv-cost-chip">${money(cost)} د.ك</span>` : ""}
@@ -347,6 +497,7 @@ const INV = (function () {
     return `
     <div class="inv-detail">
       <div class="inv-detail-inner">
+        ${marketPriceHtml(it, true)}
         <div class="inv-lbl">حالة الشراء</div>
         <div class="inv-segs">${seg("none", "غير محدد")}${seg("wanted", "مطلوب")}${seg("purchased", "تم شراؤه")}</div>
 
@@ -357,7 +508,7 @@ const INV = (function () {
 
         <div class="inv-fields">
           <div>
-            <label class="inv-lbl" for="inv-c-${esc(it.id)}">تكلفة 50 مل بالدينار</label>
+            <label class="inv-lbl" for="inv-c-${esc(it.id)}">تكلفة الزيت 50 مل بالدينار</label>
             <input id="inv-c-${esc(it.id)}" type="number" inputmode="decimal" min="0" step="0.001" value="${esc(it.cost50)}" placeholder="0.000" oninput="INV.setField('${esc(it.id)}','cost50',this.value)">
           </div>
           <div>
@@ -366,6 +517,7 @@ const INV = (function () {
           </div>
         </div>
 
+        <button type="button" class="inv-btn inv-collection-action" onclick="INV.toggleCollection('${esc(it.id)}')">${it.ownCollection ? "↩ نقل إلى المخزون العام" : "◇ إضافة إلى الخاص بنا"}</button>
         <div class="inv-foot">
           <button type="button" class="inv-btn" onclick="INV.toggleCancel('${esc(it.id)}')">${it.canceled ? "↩️ إعادة العطر للقائمة" : "🚫 إلغاء العطر"}</button>
           <button type="button" class="inv-btn inv-danger" onclick="INV.remove('${esc(it.id)}')">🗑 حذف</button>
@@ -383,13 +535,19 @@ const INV = (function () {
     else if (filters.status === "canceled" && filters.gender === "all") title = "العطور الملغاة";
     else if (filters.status === "unset" && filters.gender === "all") title = "غير محدد";
     else if (filters.gender !== "all" || filters.status !== "all") title = "نتائج التصفية";
+    if (filters.collection !== "all") {
+      const collectionTitle = filters.collection === "own" ? "الخاص بنا" : "المخزون العام";
+      title = title === "كل العطور" ? collectionTitle : `${collectionTitle} · ${title}`;
+    }
     $("inv-list-title").textContent = title;
-    $("inv-list").innerHTML = GROUPS.map(g => {
-      const arr = sortItems(list.filter(x => x.gender === g));
+    const sections = filters.collection === "all" ? ["own", ...GROUPS] : GROUPS;
+    $("inv-list").innerHTML = sections.map(g => {
+      const arr = sortItems(list.filter(x => g === "own" ? x.ownCollection :
+        x.gender === g && (filters.collection !== "all" || !x.ownCollection)));
       if (!arr.length) return "";
       return `
       <section class="inv-sec">
-        <h3 class="inv-sec-h"><span>${genderIcon(g)} ${g}</span><em>${arr.length}</em></h3>
+        <h3 class="inv-sec-h"><span>${g === "own" ? "◇ الخاص بنا" : `${genderIcon(g)} ${g}`}</span><em>${arr.length}</em></h3>
         ${arr.map(rowHtml).join("")}
       </section>`;
     }).join("");
@@ -405,6 +563,17 @@ const INV = (function () {
   function setFilter(key, val) {
     filters[key] = val;
     if (key === "status" || key === "gender") renderAll(); else renderList();
+  }
+  function setCollection(collection) {
+    filters.collection = collection;
+    expanded.clear();
+    renderAll();
+  }
+  function toggleCollection(id) {
+    const it = find(id); if (!it) return;
+    it.ownCollection = !it.ownCollection;
+    save(); renderAll();
+    flash(it.ownCollection ? "تم النقل إلى الخاص بنا ✓" : "تم النقل إلى المخزون العام ✓");
   }
   function setView(view) {
     filters.gender = GROUPS.includes(view) ? view : "all";
@@ -424,10 +593,11 @@ const INV = (function () {
     }
   }
   function clearFilters() {
-    filters = { search: "", gender: "all", stage: "all", status: "all" };
+    filters = { search: "", gender: "all", stage: "all", status: "all", collection: "all", price: "all" };
     $("inv-q").value = "";
     $("inv-f-stage").value = "all";
     $("inv-f-status").value = "all";
+    $("inv-f-price").value = "all";
     renderAll();
   }
   function toggle(id) {
@@ -463,7 +633,7 @@ const INV = (function () {
     expanded.delete(id);
     save(); renderAll(); flash("تم حذف العطر");
   }
-  function openSheet() { const s = $("inv-sheet"); if (s) s.classList.add("show"); sheetOpen = true; }
+  function openSheet() { $("inv-n-collection").value = filters.collection === "own" ? "own" : "general"; const s = $("inv-sheet"); if (s) s.classList.add("show"); sheetOpen = true; }
   function closeSheet() { const s = $("inv-sheet"); if (s) s.classList.remove("show"); sheetOpen = false; }
   function add(ev) {
     ev.preventDefault();
@@ -474,6 +644,7 @@ const INV = (function () {
     const state = $("inv-n-state").value;
     const it = normalize({
       id: `custom_${Date.now()}`, gender, brand, name,
+      ownCollection: $("inv-n-collection").value === "own",
       stage: $("inv-n-stage").value,
       priority: Number($("inv-n-priority").value),
       purchased: state === "purchased", wanted: state === "wanted"
@@ -593,7 +764,7 @@ const INV = (function () {
 
   function exportData() {
     save();
-    const payload = { app: "Kuwait Perfume Manager", version: 4, exportedAt: new Date().toISOString(), perfumes: items };
+    const payload = { app: "Kuwait Perfume Manager", version: 5, exportedAt: new Date().toISOString(), perfumes: items };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -611,7 +782,7 @@ const INV = (function () {
         const list = Array.isArray(parsed) ? parsed : parsed.perfumes;
         if (!Array.isArray(list)) throw new Error("bad format");
         if (!confirm(`سيتم استبدال القائمة الحالية بـ ${list.length} عطر من الملف. متأكد؟`)) return;
-        items = list.map(normalize);
+        items = list.length ? migrateCollection(list) : [];
         expanded.clear();
         save(); clearFilters();
         flash("تم استيراد البيانات بنجاح ✓");
@@ -631,6 +802,7 @@ const INV = (function () {
   function init() {
     if (ready) return;
     items = load();
+    save();
     shell();
     renderAll();
     ready = true;
@@ -649,7 +821,7 @@ const INV = (function () {
 
   return {
     init, show, back, canBack,
-    setFilter, setView, toggleFilters, clearFilters, toggle, setState, setPriority, setField,
+    setCollection, toggleCollection, setFilter, setView, toggleFilters, clearFilters, toggle, setState, setPriority, setField,
     toggleCancel, remove, openSheet, closeSheet, add,
     exportPdf, closePdf, exportData, importData, resetDefaults
   };
